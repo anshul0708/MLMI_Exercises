@@ -28,14 +28,6 @@ y = DIGITS_DATASET['label'].values.astype(numpy.uint8)
 
 y = label_binarize(y, classes=range(0,10))
 
-"""
-# Test a few images
-for i in range(0,4):
-    index = random.randint(0,1000)
-    cv2.imshow("image", X[index].reshape(28,28)), cv2.waitKey(0)
-    print y[index]
-"""
-
 """ Task B """
 
 pca = PCA(n_components=0.8)
@@ -45,20 +37,9 @@ X_transformed = pca.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X_transformed[0:300], y[0:300], test_size=.2)
 
 
-
-#print X_transformed.shape
-#print pca.explained_variance_ratio_
-#print pca.n_components_
-
 """ Create a new list for specific digit """
 
-def label_list(y, number):
-    """ Create new label list 1 for the number zero elsewhere """
-    return (y == number).astype(int)
-
-#svm_models = {}
-#for number in range(0,10):
-model =  OneVsRestClassifier(svm.SVC(C = 1.0, kernel='rbf', probability=True, gamma='auto'), n_jobs=-1)
+model = OneVsRestClassifier(svm.SVC(C = 1.0, kernel='linear', probability=True, gamma='auto'), n_jobs=-1)
 model_score = model.fit(X_train, y_train).decision_function(X_test)
 
 # Compute ROC curve and ROC area for each class

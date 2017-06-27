@@ -13,6 +13,7 @@
     % --------------------------------------------------------------------------------------------
 """
 
+import os
 import numpy as np
 import scipy.io as sio
 from mpl_toolkits.mplot3d import Axes3D
@@ -146,16 +147,15 @@ def usingCOV(dataMatrix, desiredVariancePercentage=1.0):
     # return the object
     return obj
 
-mat = sio.loadmat('/home/nomad/Documents/Projects/MLMI/05_exercise/Assignment_PythonKmeansPCA/Assignment_Python/data/filtHeartDataSet.mat')
+PATH = os.getcwd() + '/data/filtHeartDataSet.mat'
+mat = sio.loadmat(PATH)
 dataMat = mat['dataMatrix']
 labels = mat['labels']
 print labels.shape
 ans =  usingSVD(dataMat.T, 0.98)
 print ans['projectedData'].shape
 
-
 COLORS = np.array(['r' if label == 'Yes' else 'b' for label in labels])
-
 
 ind = np.where(COLORS=='r')
 data_r = ans['projectedData'][:, ind]

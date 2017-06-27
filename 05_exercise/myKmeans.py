@@ -13,6 +13,7 @@
     % --------------------------------------------------------------------------------------------
 """
 
+import os
 import numpy as np
 import scipy.io as sio
 from mpl_toolkits.mplot3d import Axes3D
@@ -216,8 +217,9 @@ def runKmeansVis(dataMatrix, numberOfCluster):
         
 
 # return objKmeansVis
-
-mat = sio.loadmat('/home/nomad/Documents/Projects/MLMI/05_exercise/Assignment_PythonKmeansPCA/Assignment_Python/data/toydata2.mat')
+PATH = os.getcwd() + '/data/toydata2.mat'
+mat = sio.loadmat(PATH)
 dataMat = mat['data']
-runKmeans(dataMat, 8, 10)
+#runKmeans(dataMat, 8, 10)
+runKmeansVis(dataMat, 8)
 

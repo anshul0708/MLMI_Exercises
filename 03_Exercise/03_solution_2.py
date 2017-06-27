@@ -86,4 +86,3 @@ def measures(model, X, y):
 measures(random_forest_model, X, y)
 measures(logistic_regression_model, X, y)
 measures(svm_model, X, y)
-

@@ -1,8 +1,9 @@
+import os
 import scipy.io as sio
 import matplotlib.pyplot as plt
 
-
-mat = sio.loadmat('/home/nomad/Documents/Projects/MLMI/04_exercise/AutoencoderAssignment/DRIVEdata.mat')
+PATH = os.getcwd() + '/DRIVEdata.mat'
+mat = sio.loadmat(PATH)
 labels = mat['Labels']
 images = mat['DataMatrix']
 size = labels.shape

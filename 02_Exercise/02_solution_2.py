@@ -57,7 +57,7 @@ def label_list(y, number):
 """ Task D """
 
 # Shuffle and split training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X_transformed[0:1000], y[0:1000], test_size=.2)
+X_train, X_test, y_train, y_test = train_test_split(X_transformed[0:1000], y[0:1000], test_size=.5)
 
 
 def model_digit(digit):
@@ -70,7 +70,7 @@ def model_digit(digit):
     color=iter(plt.cm.rainbow(numpy.linspace(0,1,8)))
 
     for index,c in enumerate(C[0:1]):
-        model = svm.SVC(C = c, kernel='linear', probability=True, gamma='auto', random_state=1)
+        model = svm.SVC(C = c, kernel='linear', probability=False, gamma=0.001)
         model = model.fit(X_train, label_list(y_train, digit))
 
         decision_score = model.decision_function(X_test)
@@ -113,7 +113,7 @@ def model_digit(digit):
     return model
 
 svm_digit_models = {}
-for digit in range(0,1):
+for digit in range(0,10):
     svm_digit_models[digit] = model_digit(digit)
 
 
