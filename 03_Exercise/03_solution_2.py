@@ -1,145 +1,89 @@
 from __future__ import division
 
 import os
-import numpy
 import pandas
-import cv2
-import random
-import matplotlib.pyplot as plt
+import numpy
 import warnings
 
+from sklearn.model_selection import KFold
+from sklearn.ensemble import RandomForestClassifier
 from sklearn import svm
-from sklearn.decomposition import PCA
-from sklearn.metrics import roc_curve
-from sklearn.metrics import precision_recall_curve
-from sklearn.model_selection import train_test_split
+from sklearn import linear_model
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
 
 # Ignore some warnings
 warnings.filterwarnings("ignore")
 
-# Path to dataset
-DIGITS_PATH = os.getcwd() + '/03-digits-dataset/'
+PATH = os.getcwd() + '/04_RandomForests/'
 
-""" Task A """
+# Import data into pandas data frames
+TUBERCULOSIS_DATA = pandas.read_csv(PATH + 'TuberculosisData.csv')
 
-# Read train data into numpy array
-DIGITS_DATASET = pandas.read_csv(DIGITS_PATH + 'train.csv')
+# Create X and y
+X = TUBERCULOSIS_DATA.ix[:,:-1].values
+y = TUBERCULOSIS_DATA['Class'].values
 
-X = DIGITS_DATASET.ix[:,1:].values.astype(numpy.uint8)
-y = DIGITS_DATASET['label'].values.astype(numpy.uint8)
+# Create 5 fold dataset
+kf = KFold(n_splits=5, shuffle=True, random_state=5)
 
-def taska():
-    # Test a few images
-    for i in range(0,4):
-        index = random.randint(0,1000)
-        cv2.imshow("image", X[index].reshape(28,28)), cv2.waitKey(0)
-        print y[index]
-
-#taska()
-
-""" Task B """
-
-pca = PCA(n_components=0.8)
-X_transformed = pca.fit_transform(X)
-
-#print X_transformed.shape
-#print pca.explained_variance_ratio_
-#print pca.n_components_
-
-""" Task C """
-
-def label_list(y, number):
-    """ Create new label list 1 for the number zero elsewhere """
-    return (y == number).astype(int)
-
-""" Task D """
-
-# Shuffle and split training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X_transformed[0:1000], y[0:1000], test_size=.2)
+random_forest_model = RandomForestClassifier(n_estimators=20, max_depth=4, warm_start=True)
+logistic_regression_model = linear_model.LogisticRegression(C=1e6, solver='liblinear', fit_intercept=True, intercept_scaling=1e3, warm_start=True)
+svm_model = svm.SVC(kernel='rbf', C=1.0, gamma=1.0)
 
 
-def model_digit(digit):
+# Split data into 5 folds
+for train_index, test_index in kf.split(X):
+    # Create the testing and the training fold
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
 
-    C = [0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000]
-    #G = [0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000]
+    #random_forest_model.set_params(n_estimators=25)
+    random_forest_model.fit(X_train, y_train)
+    logistic_regression_model.fit(X_train, y_train)
+    svm_model.fit(X_train, y_train)
 
-    #plt.ion()
-    plt.subplots(1,2)
-    color=iter(plt.cm.rainbow(numpy.linspace(0,1,8)))
-
-    for index,c in enumerate(C[0:1]):
-        model = svm.SVC(C = c, kernel='linear', probability=True, gamma='auto', random_state=1)
-        model = model.fit(X_train, label_list(y_train, digit))
-
-        decision_score = model.decision_function(X_test)
-        probability_score = model.decision_function(X_test)
-
-        fpr, tpr, _ = roc_curve(label_list(y_test, digit), decision_score)
-        precision, recall, _ = precision_recall_curve(label_list(y_test, digit), probability_score)
-
-        accuracy = model.score(X_test, label_list(y_test, digit))
-
-        print "C =", c, "and the accracy is :", accuracy
-        print confusion_matrix(label_list(y_test, digit), model.predict(X_test))
-        print classification_report(label_list(y_test, digit), model.predict(X_test))
-
-        clr = next(color)
-        lw = 2
-
-        plt.subplot(1,2,1)
-        plt.plot(fpr, tpr, color=clr, lw=lw, label='C =' + str(c))
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic curve')
-        plt.legend(loc="lower right")
-
-        plt.subplot(1, 2, 2)
-        plt.plot(recall, precision, lw=lw, color=clr, label='C =' + str(c))
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.ylim([0.0, 1.05])
-        plt.xlim([0.0, 1.0])
-        plt.title('Precision-Recall Curve')
-        plt.legend(loc="lower left")
-        #plt.pause(2.0)
-        plt.draw()
-
-    plt.show()
-
-    return model
-
-svm_digit_models = {}
-for digit in range(0,1):
-    svm_digit_models[digit] = model_digit(digit)
+    print '\n\nRandom Forest', random_forest_model.score(X_test, y_test)
+    print 'LR', logistic_regression_model.score(X_test, y_test)
+    print 'SVC', svm_model.score(X_test, y_test)
 
 
-""" Testing """
+def measures(model, X, y):
+    """ Calculate evaluation measures """
 
-DIGITS_DATASET = pandas.read_csv(DIGITS_PATH + 'test.csv')
+    # Predict labels
+    predicted_labels = model.predict(X)
 
-TEST = DIGITS_DATASET.values.astype(numpy.uint8)
-X_PCA = pca.fit_transform(TEST)
+    # Initialize variables to calculate performance measures
+    TP = 0
+    TN = 0
+    FP = 0
+    FN = 0
 
-def taskd(X, X_PCA, models):
-    # Test a few images
-    for i in range(0,7):
-        index = random.randint(0,1000)
-        cv2.imshow("image", X[index].reshape(28,28)), cv2.waitKey(0)
-        print X[index].shape
-        X_reduced = X_PCA[index]
-        prob_list = []
-        for num in range(0, 10):
-            prob_list.append(models[num].predict_proba(X_reduced)[0,1])
-        print prob_list
-        print 'Digit is :', prob_list.index(max(prob_list))
+    for (yp,yt) in zip(predicted_labels, y):
+        if yp == yt:
+            if yp == 2:
+                TP += 1
+            else:
+                TN += 1
+        else:
+            if yp == 2:
+                FP += 1
+            else:
+                FN += 1
 
-#taskd(TEST, X_PCA, svm_digit_models)
+    # Take class 2 as positive class
+    accuracy = (TP + TN) / (TP + TN + FP + FN)
+    sensitivity = TP / (TP + FN)
+    specificity = TN / (TN + FP)
 
+    print "\n\nClassification report for classifier", model
+    print '\nAccuracy :', accuracy, '\nSensitivity :', sensitivity, '\nSpecificity :', specificity
+    print confusion_matrix(y, predicted_labels)
+    #print("Classification report for classifier %s:\n%s\n" % (model, metrics.classification_report(y, predicted_labels)))
 
-# Linear
-# Any c
-# G - not required for linear
+measures(random_forest_model, X, y)
+measures(logistic_regression_model, X, y)
+measures(svm_model, X, y)
+

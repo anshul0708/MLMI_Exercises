@@ -1,266 +1,141 @@
 from __future__ import division
 
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from matplotlib.colors import ListedColormap
+
 import os
+import pandas
 import numpy
 
-from sklearn import svm
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 
-# Path to dataset
-TWOMOONS_PATH = os.getcwd() + '/twomoons/'
+PATH = os.getcwd() + '/04_RandomForests/'
 
-""" Task A """
+# Import data into pandas data frames
+TWIST_DATA = pandas.read_csv(PATH + 'TwistData.csv')
+SPIRAL_DATA = pandas.read_csv(PATH + 'SpiralData.csv')
 
-# Read train data into numpy array
-X_twomoons = numpy.genfromtxt(TWOMOONS_PATH + 'xtrain.csv', delimiter=',')
-y_twomoons = numpy.genfromtxt(TWOMOONS_PATH + 'ytrain.csv', delimiter=',').astype(int)
-
-def taska():
-    """ Plot data with different labels with different colors """
-    plt.scatter(X_twomoons[:, 0], X_twomoons[:, 1], c=y_twomoons, cmap=plt.cm.coolwarm)
-    plt.show()
-
-taska()
+# Split into training and testing
+TWIST_TRAIN, TWIST_TEST = train_test_split( TWIST_DATA, test_size = 0.2)
+SPIRAL_TRAIN, SPIRAL_TEST = train_test_split( SPIRAL_DATA, test_size = 0.2)
 
 """ Task B """
 
-def svm_fit(X, y, kernel='rbf', c=1.0):
-    """ Initialize a model, calculate measures on training data"""
-    svm_model = svm.SVC(kernel=kernel, C=c)
-    svm_model = svm_model.fit(X, y)
-    predicted_labels = svm_model.predict(X)
+twist_models = {}
+for num_tree in range(10,51,5):
+    model = RandomForestClassifier(n_estimators=num_tree)
+    twist_models[num_tree] = model.fit(TWIST_TRAIN.ix[:,:-1],TWIST_TRAIN['Class'])
 
-    # Initialize variables to calculate performance measures
-    T1 = 0
-    T2 = 0
-    F1 = 0
-    F2 = 0
+spiral_models = {}
+for num_tree in range(10,51,5):
+    model = RandomForestClassifier(n_estimators=num_tree)
+    spiral_models[num_tree] = model.fit(SPIRAL_TRAIN.ix[:,:-1], SPIRAL_TRAIN['Class'])
 
-    for (yp,yt) in zip(predicted_labels, y):
-        if yp == yt:
-            if yp == 1:
-                T1 += 1
-            else:
-                T2 += 1
-        else:
-            if yp == 1:
-                F1 += 1
-            else:
-                F2 += 1
+def random_forest_plot(random_forest_models, X_train, y_train, X_test, y_test, color_map, subplot_row, subplot_column):
+    """ Plot the graphs for task B """
 
-    # Take class 2 as positive class
-    accuracy = (T1 + T2) / (T1 + T2 + F1 + F2)
-    recall = T2 / (T2 + F1)
-    fpr = F2 / (F2 + T1)
-    precision = T2 / (T2 + F2)
+    #Create sub plots
+    plt.subplots(subplot_row, subplot_column)
 
-    # Add performance measures into a list
-    performance = [accuracy, recall, fpr, precision]
+    # Subplot variable
+    i = 1
 
-    return svm_model, predicted_labels, performance
+    # Plot graph for each data
+    for model in range(10,51,5):
+        # Select sub plot
+        plt.subplot(subplot_row, subplot_column, i)
+        i += 1
 
+        # Model score on test data
+        score = random_forest_models[model].score(X_test, y_test)
+
+        # create a mesh to plot in
+        h = 0.01
+        x_min, x_max = X_train[:, 0].min() - 1, X_train[:, 0].max() + 1
+        y_min, y_max = X_train[:, 1].min() - 1, X_train[:, 1].max() + 1
+        xx, yy = numpy.meshgrid(numpy.arange(x_min, x_max, h), numpy.arange(y_min, y_max, h))
+        Z = random_forest_models[model].predict(numpy.c_[xx.ravel(), yy.ravel()])
+        Z = Z.reshape(xx.shape)
+
+        plt.title('No of tress : ' + str(model))
+        #Plot the graph with first the contour
+        plt.contourf(xx, yy, Z, cmap=color_map, alpha=0.5)
+        #Plot the points of training data
+        plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=color_map, edgecolors='k')
+        #Plot the points of testing data with lighter shade
+        plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=color_map, edgecolors='k', alpha=0.5)
+
+        # Add model score
+        score = random_forest_models[model].score(X_test, y_test)
+        plt.text(xx.max() - .3, yy.min() + .3, ('%.2f' % score).lstrip('0'), size=10, horizontalalignment='right')
+
+        # Model Limits
+        plt.xlim(xx.min(), xx.max())
+        plt.ylim(yy.min(), yy.max())
+    plt.show()
+
+
+# Colors for different classes
+cm_3_class = ListedColormap(['#FF0000', '#0000FF', '#00FF00'])
+random_forest_plot(twist_models, TWIST_TRAIN.ix[:,:-1].values, TWIST_TRAIN['Class'].values, TWIST_TEST.ix[:,:-1].values, TWIST_TEST['Class'].values, color_map=cm_3_class, subplot_row=3, subplot_column=3)
+random_forest_plot(spiral_models, SPIRAL_TRAIN.ix[:,:-1].values, SPIRAL_TRAIN['Class'].values, SPIRAL_TEST.ix[:,:-1].values, SPIRAL_TEST['Class'].values, color_map=cm_3_class, subplot_row=3, subplot_column=3)
 
 """ Task C """
 
-# Read train data into numpy array
-Xtest_twomoons = numpy.genfromtxt(TWOMOONS_PATH + 'xtest.csv', delimiter=',')
-ytest_twomoons = numpy.genfromtxt(TWOMOONS_PATH + 'ytest.csv', delimiter=',').astype(int)
-
-def svm_predict(svm_model, X, y):
-    """ Evaluate a model, calculate measures on testing data"""
-    predicted_labels = svm_model.predict(X)
-
-    # Initialize variables to calculate performance measures
-    T1 = 0
-    T2 = 0
-    F1 = 0
-    F2 = 0
-
-    for (yp,yt) in zip(predicted_labels, y):
-        if yp == yt:
-            if yp == 1:
-                T1 += 1
-            else:
-                T2 += 1
-        else:
-            if yp == 1:
-                F1 += 1
-            else:
-                F2 += 1
-
-    # Take class 2 as positive class
-    accuracy = (T1 + T2) / (T1 + T2 + F1 + F2)
-    recall = T2 / (T2 + F1)
-    fpr = F2 / (F2 + T1)
-    precision = T2 / (T2 + F2)
-
-    # Add performance measures into a list
-    performance = [accuracy, recall, fpr, precision]
-
-    return predicted_labels, performance
-
-""" Task D """
-
-C = [0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000]
-
-def training_plot(svm_data, X, y):
-    """ Plot the graphs for task D """
+def random_forest_depth_plot(random_forest_models, X_train, y_train, X_test, y_test, color_map, subplot_row, subplot_column):
+    """ Plot the graphs for task B """
 
     #Create sub plots
-    plt.subplots(2,4)
+    plt.subplots(subplot_row, subplot_column)
+
+    # Subplot variable
+    i = 1
 
     # Plot graph for each data
-    for model in range(0,len(svm_data)):
+    for model in range(2,9):
         # Select sub plot
-        plt.subplot(2,4,model+1)
+        plt.subplot(subplot_row, subplot_column, i)
+        i += 1
+
+        # Model score on test data
+        score = random_forest_models[model].score(X_test, y_test)
+
         # create a mesh to plot in
-        h = 0.02
-        x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-        y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+        h = 0.01
+        x_min, x_max = X_train[:, 0].min() - 1, X_train[:, 0].max() + 1
+        y_min, y_max = X_train[:, 1].min() - 1, X_train[:, 1].max() + 1
         xx, yy = numpy.meshgrid(numpy.arange(x_min, x_max, h), numpy.arange(y_min, y_max, h))
-        Z = svm_data[model][0].predict(numpy.c_[xx.ravel(), yy.ravel()])
+        Z = random_forest_models[model].predict(numpy.c_[xx.ravel(), yy.ravel()])
         Z = Z.reshape(xx.shape)
 
-        plt.title('Kernel : ' + svm_data[model][0].kernel +' , C = '+ str(C[model]))
+        plt.title('Depth : ' + str(model))
         #Plot the graph with first the contour
-        plt.contourf(xx, yy, Z, cmap= plt.cm.coolwarm, alpha=0.8)
+        plt.contourf(xx, yy, Z, cmap=color_map, alpha=0.5)
         #Plot the points of training data
-        plt.scatter(X[:,0], X[:,1], c=y, cmap=plt.cm.coolwarm)
+        plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=color_map, edgecolors='k')
+        #Plot the points of testing data with lighter shade
+        plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=color_map, edgecolors='k', alpha=0.5)
+
+        # Add model score
+        score = random_forest_models[model].score(X_test, y_test)
+        plt.text(xx.max() - .3, yy.min() + .3, ('%.2f' % score).lstrip('0'), size=10, horizontalalignment='right')
+
+        # Model Limits
+        plt.xlim(xx.min(), xx.max())
+        plt.ylim(yy.min(), yy.max())
     plt.show()
 
+twist_depth_models = {}
+for depth in range(2,9):
+    model = RandomForestClassifier(n_estimators=10, max_depth=depth)
+    twist_depth_models[depth] = model.fit(TWIST_TRAIN.ix[:,:-1],TWIST_TRAIN['Class'])
 
-def accuracy_plot(svm_data):
-    """ Plot graph for training and testing accuracy change with c """
-    training_accuracy = [model[2][0] for model in svm_data]
-    plt.plot(C, training_accuracy, color='Red', label="Training")
-    testing_accuracy = [model[4][0] for model in svm_data]
-    plt.plot(C, testing_accuracy, color='Blue', label="Testing")
-    plt.xlabel('C')
-    plt.ylabel('Accuracy')
-    plt.xscale('log')
-    plt.legend()
-    plt.show()
+spiral_depth_models = {}
+for depth in range(2,9):
+    model = RandomForestClassifier(n_estimators=10, max_depth=depth)
+    spiral_depth_models[depth] = model.fit(SPIRAL_TRAIN.ix[:,:-1], SPIRAL_TRAIN['Class'])
 
-# Compute models, predictions and performance for different C values in Linear model
-linear_data = []
-for c in C:
-    svm_linear, predict_training, performance_training = svm_fit(X_twomoons, y_twomoons, kernel='linear', c=c)
-    predict_testing, performance_testing = svm_predict(svm_linear, Xtest_twomoons, ytest_twomoons)
-    linear_data.append([svm_linear, predict_training, performance_training, predict_testing, performance_testing])
-
-# Compute models, predictions and performance for different C values
-rbf_data = []
-for c in C:
-    svm_linear, predict_training, performance_training = svm_fit(X_twomoons, y_twomoons, kernel='rbf', c=c)
-    predict_testing, performance_testing = svm_predict(svm_linear, Xtest_twomoons,ytest_twomoons)
-    rbf_data.append([svm_linear, predict_training, performance_training, predict_testing, performance_testing])
-
-# Linear
-training_plot(linear_data, X_twomoons, y_twomoons)
-accuracy_plot(linear_data)
-
-# RBF
-training_plot(rbf_data, X_twomoons, y_twomoons)
-accuracy_plot(rbf_data)
-
-
-
-""" Task E """
-
-def color_list(y):
-    """ Convert class labels to color """
-    for (index,label) in zip(range(0, len(y)), y):
-        if label == 1:
-            y[index] = 'b'
-        else:
-            y[index] = 'r'
-    return y
-
-def C_animated_plot(model, X, y, Xtest, ytest):
-    """ Print animated plot for different C values """
-    for index,c in enumerate(C):
-        plt.ion()
-
-        plt.scatter(X[:, 0], X[:, 1], marker='o',cmap=plt.cm.coolwarm, facecolors='none', edgecolors=color_list(y.tolist()), label='Truth Training')
-        plt.title("C: " + str(c))
-        plt.legend()
-        plt.pause(2.0)
-        #plt.cla()
-
-        plt.scatter(X[:, 0], X[:, 1], marker='+', cmap=plt.cm.coolwarm, c=color_list(model[index][1].tolist()), label='Prediction Training')
-        plt.title("C: " + str(c))
-        plt.legend()
-        plt.pause(2.0)
-        #plt.cla()
-
-        plt.scatter(Xtest[:, 0], Xtest[:, 1], marker='s',cmap=plt.cm.coolwarm, facecolors='none', edgecolors=color_list(ytest.tolist()), label='Truth Testing')
-        plt.title("C: " + str(c))
-        plt.pause(2.0)
-        plt.legend()
-        #plt.cla()
-
-        plt.scatter(Xtest[:, 0], Xtest[:, 1], marker='+', cmap=plt.cm.coolwarm, c=color_list(model[index][3].tolist()), label='Prediction Testing')
-        plt.title("C: " + str(c))
-        plt.legend()
-        plt.pause(5.0)
-        plt.cla()
-
-        plt.draw()
-
-C_animated_plot(rbf_data, X_twomoons, y_twomoons, Xtest_twomoons, ytest_twomoons)
-
-"""
-def plot_truth_pointwise(X, color, marker):
-    plt.ion()
-    for (x,c) in zip(X,color):
-        plt.scatter(x[0], x[1], marker=marker, cmap=cm_bright, facecolors='none', edgecolors=c)
-        plt.pause(1e-9)
-    plt.draw()
-    while True:
-        plt.pause(0.05)
-
-def plot_predicition_pointwise(ims, X, color, marker):
-    for (x,c) in zip(X,color):
-        im = plt.scatter(X[:, 0], X[:, 1], marker=marker, cmap=plt.cm.coolwarm, c=c)
-        ims.append([im])
-        print "Added 2"
-    return ims
-
-
-def animated_plot(svm_model, X, y, Xtest, ytest):
-    #Draw a animated plot for different C values for training and testing data
-    fig = plt.figure()
-
-    ims = []
-    for model in svm_model:
-        plt.title("C: " + str(c))
-        ims = plot_truth_pointwise(ims, X, color_list(y.tolist()), 'o')
-        ims = plot_predicition_pointwise(ims, X, color_list(model[1].tolist()), '+')
-        ims = plot_truth_pointwise(ims, Xtest, color_list(ytest.tolist()), 's')
-        ims = plot_predicition_pointwise(ims, Xtest, color_list(model[1].tolist()), '+')
-        #plt.cla()
-
-    print len(ims)
-
-    ani = animation.ArtistAnimation(fig, ims, interval=17, blit=True, repeat_delay=2000)
-    plt.show()
-
-#animated_plot(rbf_data[0:2], X_twomoons, y_twomoons, Xtest_twomoons, ytest_twomoons)
-#plot_truth_pointwise(X_twomoons, color_list(y_twomoons.tolist()), 'o')
-
-
- 
-    ims = []
-    for c in C:
-        plt.title("C: " + str(c))
-        im = plt.scatter(X[:, 0], X[:, 1], marker='o',cmap=plt.cm.coolwarm, facecolors='none', edgecolors=color_list(y.tolist()), label='Truth Training')
-        ims.append([im])
-        plt.scatter(X[:, 0], X[:, 1], marker='+', cmap=plt.cm.coolwarm, c=color_list(svm_model[0][1].tolist()), label='Prediction Training')
-        ims.append([im])
-        plt.scatter(Xtest[:, 0], Xtest[:, 1], marker='s', cmap=plt.cm.coolwarm, facecolors='none', edgecolors=color_list(ytest.tolist()), label='Truth Testing')
-        ims.append([im])
-        plt.scatter(Xtest[:, 0], Xtest[:, 1], marker='+', cmap=plt.cm.coolwarm, c=color_list(svm_model[0][3].tolist()), label='Prediction Testing')
-        ims.append([im])
-        #plt.cla()
-"""
+# Plots
+random_forest_depth_plot(twist_depth_models, TWIST_TRAIN.ix[:,:-1].values, TWIST_TRAIN['Class'].values, TWIST_TEST.ix[:,:-1].values, TWIST_TEST['Class'].values, color_map=cm_3_class, subplot_row=2, subplot_column=4)
+random_forest_depth_plot(spiral_depth_models, SPIRAL_TRAIN.ix[:,:-1].values, SPIRAL_TRAIN['Class'].values, SPIRAL_TEST.ix[:,:-1].values, SPIRAL_TEST['Class'].values, color_map=cm_3_class, subplot_row=2, subplot_column=4)
