@@ -18,21 +18,19 @@ import matplotlib.pyplot as plt
 import utils
 
 # Parameters
-learning_rate = 1e-2
-training_epochs = 200
+learning_rate = 1e-3
+training_epochs = 20
 batch_size = 100
-display_step = 10
-
-
+display_step = 1
 examples_to_show = 10
-decay_steps = 100
-decay_rate = 0.9
+#decay_steps = 100
+#decay_rate = 0.9
 
 # Network Parameters
 n_hidden_1 = 50 # 1st layer num features
 std = 0.2
 # n_hidden_2 = 125 # 2nd layer num features
-n_input = 625 # MNIST data input (img shape: 25*25)
+n_input = 625 # data input (img shape: 25*25)
 
 # tf Graph input (only pictures)
 X = tf.placeholder("float", [None, n_input])
@@ -83,7 +81,6 @@ encoder_op = encoder(X_new)
 
 decoder_op = decoder(encoder_op)
 
-global_steps = 0
 losses =[]
 # Prediction
 y_pred = decoder_op
@@ -100,31 +97,29 @@ init = tf.global_variables_initializer()
 
 # Launch the graph
 with tf.Session() as sess:
+    # Load Data
     train, test = utils.load_data()
     sess.run(init)
     total_batch = int(len(train)/batch_size)
     writer = tf.summary.FileWriter('/tmp/autolog', sess.graph)
     # Training cycle
     for epoch in range(training_epochs):
-        global_steps = epoch
         # Loop over all batches
-        for i in range(total_batch):
-            batch_xs = train[i*batch_size : (i+1)*batch_size]
+        for i in range(0,total_batch-1):
+            batch_xs = train[i*batch_size:(i+1)*batch_size]
             # Run optimization op (backprop) and cost op (to get loss value)
             _, c = sess.run([optimizer, cost], feed_dict={X: batch_xs})
             losses.append(c)
         # Display logs per epoch step
         if epoch % display_step == 0:
-            print("Epoch:", '%04d' % (epoch+1),
-                  "cost=", "{:.9f}".format(c))
+            print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(c))
             
 
     print("Optimization Finished!")
     plt.plot(losses)
     plt.show()
     # Applying encode and decode over test set
-    encode_decode = sess.run(
-        y_pred, feed_dict={X: test[:examples_to_show]})
+    encode_decode = sess.run(y_pred, feed_dict={X: test[:examples_to_show]})
     
     cost = sess.run(cost, feed_dict={X: test})
     print(cost)
