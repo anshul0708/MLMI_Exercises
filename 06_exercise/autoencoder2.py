@@ -130,6 +130,9 @@ with tf.Session() as sess:
         a[1][i].imshow(np.reshape(encode_decode[i], (25, 25)), cmap=plt.cm.gray)
     
     weight1 = sess.run(weights['encoder_h1'])
+    for i in range(weight1.shape[0]):
+        val = np.sqrt(np.sum(weight1[i]**2))
+        weight1[i] /= val
     weight1 = weight1.T
     # hinton(weight1)
     vmin = weight1[0].min()
@@ -146,22 +149,22 @@ with tf.Session() as sess:
             for j in range(0, 10):                
                 arange[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin, vmax=.5 * vmax)
                 index += 1
-    weight1 = sess.run(weights['decoder_h1'])
-    vmin = weight1[0].min()
-    vmax = weight1[0].max()
-    w_plot2, arange2 = plt.subplots(5, 10, figsize=(10, 10))
-    new_wt = np.zeros((50,25,25))
-    for i in range(len(weight1)):
-        new_wt[i] = np.reshape(weight1[i],(-1, 25))
-    weight1 = new_wt
+    # weight1 = sess.run(weights['decoder_h1'])
+    # vmin = weight1[0].min()
+    # vmax = weight1[0].max()
+    # w_plot2, arange2 = plt.subplots(5, 10, figsize=(10, 10))
+    # new_wt = np.zeros((50,25,25))
+    # for i in range(len(weight1)):
+    #     new_wt[i] = np.reshape(weight1[i],(-1, 25))
+    # weight1 = new_wt
 
-    index = 0
-    for i in range(10):
-        if index < len(weight1):
-            for j in range(0, 10):                
-                arange2[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin,
-               vmax=.5 * vmax)
-                index += 1
+    # index = 0
+    # for i in range(10):
+    #     if index < len(weight1):
+    #         for j in range(0, 10):                
+    #             arange2[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin,
+    #            vmax=.5 * vmax)
+    #             index += 1
 
     f.show()
     w_plot.show()
