@@ -135,8 +135,7 @@ with tf.Session() as sess:
         weight1[i] /= val
     weight1 = weight1.T
     # hinton(weight1)
-    vmin = weight1[0].min()
-    vmax = weight1[0].max()
+    
     w_plot, arange = plt.subplots(5, 10, figsize=(10, 10))
     new_wt = np.zeros((50,25,25))
     for i in range(len(weight1)):
@@ -146,7 +145,9 @@ with tf.Session() as sess:
     index = 0
     for i in range(10):
         if index < len(weight1):
-            for j in range(0, 10):                
+            for j in range(0, 10):   
+                vmin = weight1[index].min()
+                vmax = weight1[index].max()             
                 arange[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin, vmax=.5 * vmax)
                 index += 1
     # weight1 = sess.run(weights['decoder_h1'])
@@ -168,7 +169,7 @@ with tf.Session() as sess:
 
     f.show()
     w_plot.show()
-    w_plot2.show()
+    #w_plot2.show()
     
     plt.draw()
     plt.waitforbuttonpress()

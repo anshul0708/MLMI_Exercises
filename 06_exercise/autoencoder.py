@@ -14,10 +14,11 @@ from __future__ import division, print_function, absolute_import
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+import utils
 
 # Import MNIST data
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
+# from tensorflow.examples.tutorials.mnist import input_data
+# mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
 
 # Parameters
 learning_rate = 0.01
@@ -145,25 +146,25 @@ with tf.Session() as sess:
                 arange[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin,
                vmax=.5 * vmax)
                 index += 1
-    weight1 = sess.run(weights['decoder_h1'])
-    vmin = weight1[0].min()
-    vmax = weight1[0].max()
-    w_plot2, arange2 = plt.subplots(10, 10, figsize=(10, 10))
-    new_wt = np.zeros((100,28,28))
-    for i in range(len(weight1)):
-        new_wt[i] = np.reshape(weight1[i],(-1, 28))
-    weight1 = new_wt
+    # weight1 = sess.run(weights['decoder_h1'])
+    # vmin = weight1[0].min()
+    # vmax = weight1[0].max()
+    # w_plot2, arange2 = plt.subplots(10, 10, figsize=(10, 10))
+    # new_wt = np.zeros((100,28,28))
+    # for i in range(len(weight1)):
+    #     new_wt[i] = np.reshape(weight1[i],(-1, 28))
+    # weight1 = new_wt
 
-    index = 0
-    for i in range(10):
-        if index < len(weight1):
-            for j in range(0, 10):                
-                arange2[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin, vmax=.5 * vmax)
-                index += 1
+    # index = 0
+    # for i in range(10):
+    #     if index < len(weight1):
+    #         for j in range(0, 10):                
+    #             arange2[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin, vmax=.5 * vmax)
+    #             index += 1
 
     f.show()
     w_plot.show()
-    w_plot2.show()
+    # w_plot2.show()
     
     plt.draw()
     plt.waitforbuttonpress()
