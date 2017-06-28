@@ -168,7 +168,7 @@ with tf.Session() as sess:
 
     f.show()
     w_plot.show()
-    w_plot2.show()
+    #w_plot2.show()
     
     plt.draw()
     plt.waitforbuttonpress()
