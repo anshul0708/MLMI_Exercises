@@ -119,8 +119,7 @@ with tf.Session() as sess:
     plt.plot(losses)
     plt.show()
     # Applying encode and decode over test set
-    encode_decode = sess.run(
-        y_pred, feed_dict={X: mnist.test.images[:examples_to_show]})
+    encode_decode = sess.run(y_pred, feed_dict={X: mnist.test.images[:examples_to_show]})
 
     # Compare original images with their reconstructions
     f, a = plt.subplots(2, 10, figsize=(10, 2))
@@ -168,4 +167,3 @@ with tf.Session() as sess:
     
     plt.draw()
     plt.waitforbuttonpress()
-    

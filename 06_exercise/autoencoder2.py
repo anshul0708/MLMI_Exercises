@@ -19,7 +19,7 @@ import utils
 
 # Parameters
 learning_rate = 1e-3
-training_epochs = 20
+training_epochs = 200
 batch_size = 100
 display_step = 1
 examples_to_show = 10
@@ -126,8 +126,8 @@ with tf.Session() as sess:
     # # Compare original images with their reconstructions
     f, a = plt.subplots(2, 10, figsize=(10, 2))
     for i in range(examples_to_show):
-        a[0][i].imshow(np.reshape(test[i], (25, 25)))
-        a[1][i].imshow(np.reshape(encode_decode[i], (25, 25)))
+        a[0][i].imshow(np.reshape(test[i], (25, 25)), cmap=plt.cm.gray)
+        a[1][i].imshow(np.reshape(encode_decode[i], (25, 25)), cmap=plt.cm.gray)
     
     weight1 = sess.run(weights['encoder_h1'])
     weight1 = weight1.T
@@ -144,8 +144,7 @@ with tf.Session() as sess:
     for i in range(10):
         if index < len(weight1):
             for j in range(0, 10):                
-                arange[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin,
-               vmax=.5 * vmax)
+                arange[i][j].imshow(weight1[index],cmap=plt.cm.gray, vmin=.5 * vmin, vmax=.5 * vmax)
                 index += 1
     weight1 = sess.run(weights['decoder_h1'])
     vmin = weight1[0].min()

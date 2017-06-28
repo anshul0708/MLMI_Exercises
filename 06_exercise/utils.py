@@ -5,6 +5,8 @@ import scipy.io as sio
 import numpy
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import normalize
+from sklearn.preprocessing import scale
 
 PATH = os.getcwd() + '/DRIVEdata.mat'
 mat = sio.loadmat(PATH)
@@ -22,7 +24,9 @@ print labels
 def load_data():
     X_train, X_test =train_test_split(images, test_size=0.2, random_state=42)
     X_train = X_train.astype('float32') / 255.
-    X_test = X_test.astype('float32') / 255.
+    # X_test = X_test.astype('float32') / 255.
+    #X_train = normalize(X_train.astype('float32'))
+    #X_test = normalize(X_test.astype('float32'))
     return X_train, X_test
 
 def visualize_weights(W1, panel_shape, tile_size):
