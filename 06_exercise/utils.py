@@ -27,10 +27,10 @@ X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=0.
 #X_train -= mean_train
 #X_test -= mean_train
 # mean_test = numpy.mean(X_test, axis=0)
-# X_train = X_train.astype('float32') / 255.
-# X_test = X_test.astype('float32') / 255.
-X_train = normalize(X_train.astype('float32'))
-X_test = normalize(X_test.astype('float32'))
+X_train = X_train.astype('float32') / 255.
+X_test = X_test.astype('float32') / 255.
+#X_train = normalize(X_train.astype('float32'))
+#X_test = normalize(X_test.astype('float32'))
 
 def labels_test_data():
     y = y_test[:,0]

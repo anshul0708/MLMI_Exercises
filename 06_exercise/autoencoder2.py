@@ -14,6 +14,9 @@ from __future__ import division, print_function, absolute_import
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix
 
 import utils
 
@@ -95,10 +98,11 @@ optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 # Initializing the variables
 init = tf.global_variables_initializer()
 
+train, test = utils.load_data()
+
 # Launch the graph
 with tf.Session() as sess:
     # Load Data
-    train, test = utils.load_data()
     sess.run(init)
     total_batch = int(len(train)/batch_size)
     writer = tf.summary.FileWriter('/tmp/autolog', sess.graph)
@@ -122,7 +126,7 @@ with tf.Session() as sess:
     encode_decode = sess.run(y_pred, feed_dict={X: test[:examples_to_show]})
     
     cost = sess.run(cost, feed_dict={X: test})
-    print(cost)
+    print('Cost :',cost)
     # # Compare original images with their reconstructions
     f, a = plt.subplots(2, 10, figsize=(10, 2))
     for i in range(examples_to_show):
@@ -130,6 +134,7 @@ with tf.Session() as sess:
         a[1][i].imshow(np.reshape(encode_decode[i], (25, 25)), cmap=plt.cm.gray)
     
     weight1 = sess.run(weights['encoder_h1'])
+    weight_train = weight1.copy()
     for i in range(weight1.shape[0]):
         val = np.sqrt(np.sum(weight1[i]**2))
         weight1[i] /= val
@@ -167,10 +172,28 @@ with tf.Session() as sess:
     #            vmax=.5 * vmax)
     #             index += 1
 
+    X_train = np.matmul(train, weight_train)[0:2000]
+    X_test = np.matmul(test, weight_train)[0:2000]
+    y_train = utils.labels_test_data()[0:2000]
+    y_test = utils.labels_train_data()[0:2000]
+
+    random_forest_model = RandomForestClassifier(n_estimators=20, max_depth=4, warm_start=True)
+    logistic_regression_model = LogisticRegression(C=1e6, solver='liblinear', fit_intercept=True, intercept_scaling=1e3, warm_start=True)
+
+    # Fit models
+    logistic_regression_model = logistic_regression_model.fit(X_train, y_train)
+    random_forest_model = random_forest_model.fit(X_train, y_train)
+
+    # Model scores
+    print('LR :', logistic_regression_model.score(X_test, y_test))
+    print('LR Confusion Matrix :', confusion_matrix(y_test, logistic_regression_model.predict(X_test)))
+    print('RF :', random_forest_model.score(X_test, y_test))
+    print('RF Confusion Matrix :', confusion_matrix(y_test, random_forest_model.predict(X_test)))
+
+
     f.show()
     w_plot.show()
     #w_plot2.show()
     
     plt.draw()
     plt.waitforbuttonpress()
-    
