@@ -22,7 +22,7 @@ import utils
 
 # Parameters
 learning_rate = 1e-3
-training_epochs = 50
+training_epochs = 5
 batch_size = 100
 display_step = 1
 examples_to_show = 10
@@ -172,10 +172,15 @@ with tf.Session() as sess:
     #            vmax=.5 * vmax)
     #             index += 1
 
-    X_train = np.matmul(train, weight_train)[0:2000]
-    X_test = np.matmul(test, weight_train)[0:2000]
-    y_train = utils.labels_test_data()[0:2000]
-    y_test = utils.labels_train_data()[0:2000]
+    X_train = np.matmul(train, weight_train)
+    X_test = np.matmul(test, weight_train)
+    y_train = utils.labels_train_data()
+    y_test = utils.labels_test_data()
+
+    print (X_train.shape)
+    print (X_test.shape)
+    print (y_train.shape)
+    print (y_test.shape)
 
     random_forest_model = RandomForestClassifier(n_estimators=20, max_depth=4, warm_start=True)
     logistic_regression_model = LogisticRegression(C=1e6, solver='liblinear', fit_intercept=True, intercept_scaling=1e3, warm_start=True)
