@@ -75,8 +75,10 @@ def decoder(x):
 
 
 # Construct model
-# noise = tf.random_normal(shape=tf.shape(X), mean=0.0, stddev=std, dtype=tf.float32)
+
 X_new = X  
+# noise = tf.random_normal(shape=tf.shape(X), mean=0.0, stddev=std, dtype=tf.float32)
+# X_new = X + noise
 
 encoder_op = encoder(X_new)
 
