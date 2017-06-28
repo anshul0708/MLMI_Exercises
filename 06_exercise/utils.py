@@ -21,12 +21,28 @@ for i in range(0, 4):
 print labels
 """
 
+X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=0.2, random_state=42)
+
+#mean_train = numpy.mean(X_train, axis=0)
+#X_train -= mean_train
+#X_test -= mean_train
+# mean_test = numpy.mean(X_test, axis=0)
+# X_train = X_train.astype('float32') / 255.
+# X_test = X_test.astype('float32') / 255.
+X_train = normalize(X_train.astype('float32'))
+X_test = normalize(X_test.astype('float32'))
+
+def labels_test_data():
+    y = y_test[:,0]
+    y = numpy.where(y == 1, 2, 1)
+    return y
+
+def labels_train_data():
+    y = y_train[:,0]
+    y = numpy.where(y == 1, 2, 1)
+    return y
+
 def load_data():
-    X_train, X_test =train_test_split(images, test_size=0.2, random_state=42)
-    X_train = X_train.astype('float32') / 255.
-    # X_test = X_test.astype('float32') / 255.
-    #X_train = normalize(X_train.astype('float32'))
-    #X_test = normalize(X_test.astype('float32'))
     return X_train, X_test
 
 def visualize_weights(W1, panel_shape, tile_size):

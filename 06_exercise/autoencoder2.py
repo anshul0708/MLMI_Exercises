@@ -19,7 +19,7 @@ import utils
 
 # Parameters
 learning_rate = 1e-3
-training_epochs = 200
+training_epochs = 50
 batch_size = 100
 display_step = 1
 examples_to_show = 10
