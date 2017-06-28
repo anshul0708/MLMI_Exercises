@@ -70,7 +70,7 @@ def model_digit(digit):
     color=iter(plt.cm.rainbow(numpy.linspace(0,1,8)))
 
     for index,c in enumerate(C[0:1]):
-        model = svm.SVC(C = c, kernel='linear', probability=False, gamma=0.001)
+        model = svm.SVC(C = c, kernel='linear', probability=True, gamma='auto', random_state=1)
         model = model.fit(X_train, label_list(y_train, digit))
 
         decision_score = model.decision_function(X_test)
